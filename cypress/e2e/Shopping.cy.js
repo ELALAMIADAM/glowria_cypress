@@ -9,7 +9,7 @@ import CartPage from '../pages/Cart.page'
 
 describe('Login', () => {
     beforeEach(() => {
-        cy.visit('https://glowria.com/#');
+        cy.visit('https://glowria.com/');
     });
     it('sign up', () => {
         HomePage.SignUpLink();
