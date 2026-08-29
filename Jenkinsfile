@@ -15,15 +15,10 @@ pipeline {
 
         stage('Run Cypress tests') {
             steps {
-                sh 'npm run test:allure'
+                sh 'npx cypress run '
             }
         }
 
-        stage('Generate Allure report') {
-            steps {
-                sh 'npm run allure:generate'
-            }
-        }
     }
 
     post {
