@@ -1,0 +1,23 @@
+pipeline{
+    agent any
+    stages{
+        stage('global stage'){
+            agent{
+                docker{
+                    image 'cypress/base'
+                    args '-u root --entrypoint='
+                }
+            }
+        }
+        stage('install dependencies'){
+            steps{
+                sh 'npm ci'
+            }
+        }
+        stage('run tests'){
+            steps{
+                sh 'npx cypress run'
+            }
+        }
+    }
+}
