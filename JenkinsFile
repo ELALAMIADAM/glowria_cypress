@@ -7,12 +7,6 @@ pipeline {
     }
 
     stages {
-        stage('Install Allure prerequisites') {
-            steps {
-                sh 'which java || (apt-get update && apt-get install -y openjdk-17-jre-headless)'
-            }
-        }
-
         stage('Install dependencies') {
             steps {
                 sh 'npm ci'
