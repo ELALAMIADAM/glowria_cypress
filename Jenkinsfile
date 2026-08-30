@@ -1,29 +1,72 @@
 pipeline {
-    agent {
-        docker {
-            image 'cypress/included:14.5.4'
-            args '-u root --entrypoint='
-        }
+    agent any
+
+    parameters {
+        booleanParam(
+            name: 'ALLURE',
+            defaultValue: false,
+            description: 'Generate Allure report after execution'
+        )
     }
 
     stages {
-        stage('Install dependencies') {
-            steps {
-                sh 'npm ci'
+        stage('Global stage') {
+            agent {
+                docker {
+                    image 'cypress/included:14.5.4'
+                    args '-u root --entrypoint='
+                }
+            }
+
+            stages {
+                stage('Install dependencies') {
+                    steps {
+                        sh 'npm ci'
+                    }
+                }
+
+                stage('Clean Allure results') {
+                    steps {
+                        sh '''
+                            echo "Cleaning Allure artifacts..."
+                            rm -rf allure-results allure-report
+                            mkdir -p allure-results
+                            echo "Allure artifacts cleaned successfully"
+                        '''
+                    }
+                }
+
+                stage('Run Cypress tests') {
+                    steps {
+                        script {
+                            if (params.ALLURE) {
+                                sh 'npm run test:allure'
+                            } else {
+                                sh 'npx cypress run'
+                            }
+                        }
+                    }
+                }
             }
         }
-
-        stage('Run Cypress tests') {
-            steps {
-                sh 'npx cypress run '
-            }
-        }
-
     }
 
     post {
         always {
-            archiveArtifacts artifacts: 'allure-results/**,allure-report/**,cypress/screenshots/**,cypress/videos/**', allowEmptyArchive: true
+            script {
+                if (params.ALLURE) {
+                    sh '''
+                        echo "Generating Allure report..."
+                        npx allure generate allure-results --clean -o allure-report || true
+                    '''
+
+                    archiveArtifacts artifacts: 'allure-results/**,allure-report/**,cypress/screenshots/**,cypress/videos/**', allowEmptyArchive: true
+
+                    allure includeProperties: false,
+                        jdk: '',
+                        results: [[path: 'allure-results']]
+                }
+            }
         }
     }
 }
