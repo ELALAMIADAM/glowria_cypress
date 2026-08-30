@@ -39,10 +39,16 @@ pipeline {
                 stage('Run Cypress tests') {
                     steps {
                         script {
-                            if (params.ALLURE) {
-                                sh 'npm run test:allure'
-                            } else {
-                                sh 'npx cypress run'
+                            try {
+                                if (params.ALLURE) {
+                                    sh 'npx cypress run --env allure=true'
+                                } else {
+                                    sh 'npx cypress run'
+                                }
+                            } finally {
+                                if (params.ALLURE) {
+                                    sh 'npx allure generate allure-results --clean -o allure-report || true'
+                                }
                             }
                         }
                     }
@@ -55,13 +61,7 @@ pipeline {
         always {
             script {
                 if (params.ALLURE) {
-                    sh '''
-                        echo "Generating Allure report..."
-                        npx allure generate allure-results --clean -o allure-report || true
-                    '''
-
                     archiveArtifacts artifacts: 'allure-results/**,allure-report/**,cypress/screenshots/**,cypress/videos/**', allowEmptyArchive: true
-
                     allure includeProperties: false,
                         jdk: '',
                         results: [[path: 'allure-results']]
